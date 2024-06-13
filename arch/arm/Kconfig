@@ -1,0 +1,592 @@
+menu "ARM architecture"
+	depends on ARM
+
+config SYS_ARCH
+	default "arm"
+
+config ARM64
+	bool
+	select PHYS_64BIT
+	select SYS_CACHE_SHIFT_6
+
+if ARM64
+config POSITION_INDEPENDENT
+	bool "Generate position-independent pre-relocation code"
+	select INIT_SP_RELATIVE
+	help
+	  U-Boot expects to be linked to a specific hard-coded address, and to
+	  be loaded to and run from that address. This option lifts that
+	  restriction, thus allowing the code to be loaded to and executed
+	  from almost any address. This logic relies on the relocation
+	  information that is embedded in the binary to support U-Boot
+	  relocating itself to the top-of-RAM later during execution.
+
+config INIT_SP_RELATIVE
+	bool "Specify the early stack pointer relative to the .bss section"
+	help
+	  U-Boot typically uses a hard-coded value for the stack pointer
+	  before relocation. Enable this option to instead calculate the
+	  initial SP at run-time. This is useful to avoid hard-coding addresses
+	  into U-Boot, so that it can be loaded and executed at arbitrary
+	  addresses and thus avoid using arbitrary addresses at runtime.
+
+	  If this option is enabled, the early stack pointer is set to
+	  &_bss_start with a offset value added. The offset is specified by
+	  SYS_INIT_SP_BSS_OFFSET.
+
+config SYS_INIT_SP_BSS_OFFSET
+	int "Early stack offset from the .bss base address"
+	depends on INIT_SP_RELATIVE
+	default 524288
+	help
+	  This option's value is the offset added to &_bss_start in order to
+	  calculate the stack pointer. This offset should be large enough so
+	  that the early malloc region, global data (gd), and early stack usage
+	  do not overlap any appended DTB.
+
+config LINUX_KERNEL_IMAGE_HEADER
+	bool
+	help
+	  Place a Linux kernel image header at the start of the U-Boot binary.
+	  The format of the header is described in the Linux kernel source at
+	  Documentation/arm64/booting.txt. This feature is useful since the
+	  image header reports the amount of memory (BSS and similar) that
+	  U-Boot needs to use, but which isn't part of the binary.
+
+if LINUX_KERNEL_IMAGE_HEADER
+config LNX_KRNL_IMG_TEXT_OFFSET_BASE
+	hex
+	help
+	  The value subtracted from CONFIG_SYS_TEXT_BASE to calculate the
+	  TEXT_OFFSET value written to the Linux kernel image header.
+endif
+endif
+
+config GIC_V3_ITS
+	bool "ARM GICV3 ITS"
+	help
+	  ARM GICV3 Interrupt translation service (ITS).
+	  Basic support for programming locality specific peripheral
+	  interrupts (LPI) configuration tables and enable LPI tables.
+	  LPI configuration table can be used by u-boot or Linux.
+	  ARM GICV3 has limitation, once the LPI table is enabled, LPI
+	  configuration table can not be re-programmed, unless GICV3 reset.
+
+config STATIC_RELA
+	bool
+	default y if ARM64 && !POSITION_INDEPENDENT
+
+config DMA_ADDR_T_64BIT
+	bool
+	default y if ARM64
+
+config HAS_VBAR
+	bool
+
+config HAS_THUMB2
+	bool
+
+# Used for compatibility with asm files copied from the kernel
+config ARM_ASM_UNIFIED
+	bool
+	default y
+
+# Used for compatibility with asm files copied from the kernel
+config THUMB2_KERNEL
+	bool
+
+config SYS_ICACHE_OFF
+	bool "Do not enable icache"
+	default n
+	help
+	  Do not enable instruction cache in U-Boot.
+
+config SPL_SYS_ICACHE_OFF
+	bool "Do not enable icache in SPL"
+	depends on SPL
+	default SYS_ICACHE_OFF
+	help
+	  Do not enable instruction cache in SPL.
+
+config SYS_DCACHE_OFF
+	bool "Do not enable dcache"
+	default n
+	help
+	  Do not enable data cache in U-Boot.
+
+config SPL_SYS_DCACHE_OFF
+	bool "Do not enable dcache in SPL"
+	depends on SPL
+	default SYS_DCACHE_OFF
+	help
+	  Do not enable data cache in SPL.
+
+config SYS_ARM_CACHE_CP15
+	bool "CP15 based cache enabling support"
+	help
+	  Select this if your processor suports enabling caches by using
+	  CP15 registers.
+
+config SYS_ARM_MMU
+	bool "MMU-based Paged Memory Management Support"
+	select SYS_ARM_CACHE_CP15
+	help
+	  Select if you want MMU-based virtualised addressing space
+	  support via paged memory management.
+
+config SYS_ARM_MPU
+	bool 'Use the ARM v7 PMSA Compliant MPU'
+	help
+	  Some ARM systems without an MMU have instead a Memory Protection
+	  Unit (MPU) that defines the type and permissions for regions of
+	  memory.
+	  If your CPU has an MPU then you should choose 'y' here unless you
+	  know that you do not want to use the MPU.
+
+# If set, the workarounds for these ARM errata are applied early during U-Boot
+# startup. Note that in general these options force the workarounds to be
+# applied; no CPU-type/version detection exists, unlike the similar options in
+# the Linux kernel. Do not set these options unless they apply!  Also note that
+# the following can be machine-specific errata. These do have ability to
+# provide rudimentary version and machine-specific checks, but expect no
+# product checks:
+# CONFIG_ARM_ERRATA_430973
+# CONFIG_ARM_ERRATA_454179
+# CONFIG_ARM_ERRATA_621766
+# CONFIG_ARM_ERRATA_798870
+# CONFIG_ARM_ERRATA_801819
+# CONFIG_ARM_CORTEX_A8_CVE_2017_5715
+# CONFIG_ARM_CORTEX_A15_CVE_2017_5715
+
+config ARM_ERRATA_430973
+	bool
+
+config ARM_ERRATA_454179
+	bool
+
+config ARM_ERRATA_621766
+	bool
+
+config ARM_ERRATA_716044
+	bool
+
+config ARM_ERRATA_725233
+	bool
+
+config ARM_ERRATA_742230
+	bool
+
+config ARM_ERRATA_743622
+	bool
+
+config ARM_ERRATA_751472
+	bool
+
+config ARM_ERRATA_761320
+	bool
+
+config ARM_ERRATA_773022
+	bool
+
+config ARM_ERRATA_774769
+	bool
+
+config ARM_ERRATA_794072
+	bool
+
+config ARM_ERRATA_798870
+	bool
+
+config ARM_ERRATA_801819
+	bool
+
+config ARM_ERRATA_826974
+	bool
+
+config ARM_ERRATA_828024
+	bool
+
+config ARM_ERRATA_829520
+	bool
+
+config ARM_ERRATA_833069
+	bool
+
+config ARM_ERRATA_833471
+	bool
+
+config ARM_ERRATA_845369
+	bool
+
+config ARM_ERRATA_852421
+	bool
+
+config ARM_ERRATA_852423
+	bool
+
+config ARM_ERRATA_855873
+	bool
+
+config ARM_CORTEX_A8_CVE_2017_5715
+	bool
+
+config ARM_CORTEX_A15_CVE_2017_5715
+	bool
+
+config CPU_ARM720T
+	bool
+	select SYS_CACHE_SHIFT_5
+	imply SYS_ARM_MMU
+
+config CPU_ARM920T
+	bool
+	select SYS_CACHE_SHIFT_5
+	imply SYS_ARM_MMU
+
+config CPU_ARM926EJS
+	bool
+	select SYS_CACHE_SHIFT_5
+	imply SYS_ARM_MMU
+
+config CPU_ARM946ES
+	bool
+	select SYS_CACHE_SHIFT_5
+	imply SYS_ARM_MMU
+
+config CPU_ARM1136
+	bool
+	select SYS_CACHE_SHIFT_5
+	imply SYS_ARM_MMU
+
+config CPU_ARM1176
+	bool
+	select HAS_VBAR
+	select SYS_CACHE_SHIFT_5
+	imply SYS_ARM_MMU
+
+config CPU_V7A
+	bool
+	select HAS_THUMB2
+	select HAS_VBAR
+	select SYS_CACHE_SHIFT_6
+	imply SYS_ARM_MMU
+
+config CPU_V7M
+	bool
+	select HAS_THUMB2
+	select SYS_ARM_MPU
+	select SYS_CACHE_SHIFT_5
+	select SYS_THUMB_BUILD
+	select THUMB2_KERNEL
+
+config CPU_V7R
+	bool
+	select HAS_THUMB2
+	select SYS_ARM_CACHE_CP15
+	select SYS_ARM_MPU
+	select SYS_CACHE_SHIFT_6
+
+# CPU_V8 implies armv8a aarch32 mode
+config CPU_V8
+	bool
+	select CPU_V7A
+
+config CPU_PXA
+	bool
+	select SYS_CACHE_SHIFT_5
+	imply SYS_ARM_MMU
+
+config CPU_SA1100
+	bool
+	select SYS_CACHE_SHIFT_5
+	imply SYS_ARM_MMU
+
+config SYS_CPU
+	default "arm720t" if CPU_ARM720T
+	default "arm920t" if CPU_ARM920T
+	default "arm926ejs" if CPU_ARM926EJS
+	default "arm946es" if CPU_ARM946ES
+	default "arm1136" if CPU_ARM1136
+	default "arm1176" if CPU_ARM1176
+	default "armv7" if CPU_V7A
+	default "armv7" if CPU_V7R
+	default "armv7m" if CPU_V7M
+	default "pxa" if CPU_PXA
+	default "sa1100" if CPU_SA1100
+	default "armv8" if ARM64
+
+config SYS_ARM_ARCH
+	int
+	default 4 if CPU_ARM720T
+	default 4 if CPU_ARM920T
+	default 5 if CPU_ARM926EJS
+	default 5 if CPU_ARM946ES
+	default 6 if CPU_ARM1136
+	default 6 if CPU_ARM1176
+	default 7 if CPU_V7A
+	default 7 if CPU_V7M
+	default 7 if CPU_V7R
+	default 5 if CPU_PXA
+	default 4 if CPU_SA1100
+	default 8 if ARM64
+
+config SYS_CACHE_SHIFT_5
+	bool
+
+config SYS_CACHE_SHIFT_6
+	bool
+
+config SYS_CACHE_SHIFT_7
+	bool
+
+config SYS_CACHELINE_SIZE
+	int
+	default 128 if SYS_CACHE_SHIFT_7
+	default 64 if SYS_CACHE_SHIFT_6
+	default 32 if SYS_CACHE_SHIFT_5
+
+choice
+	prompt "Select the ARM data write cache policy"
+	default SYS_ARM_CACHE_WRITETHROUGH if TARGET_BCMCYGNUS || \
+					      TARGET_BCMNSP || CPU_PXA || RZA1
+	default SYS_ARM_CACHE_WRITEBACK
+
+config SYS_ARM_CACHE_WRITEBACK
+	bool "Write-back (WB)"
+	help
+	  A write updates the cache only and marks the cache line as dirty.
+	  External memory is updated only when the line is evicted or explicitly
+	  cleaned.
+
+config SYS_ARM_CACHE_WRITETHROUGH
+	bool "Write-through (WT)"
+	help
+	  A write updates both the cache and the external memory system.
+	  This does not mark the cache line as dirty.
+
+config SYS_ARM_CACHE_WRITEALLOC
+	bool "Write allocation (WA)"
+	help
+	  A cache line is allocated on a write miss. This means that executing a
+	  store instruction on the processor might cause a burst read to occur.
+	  There is a linefill to obtain the data for the cache line, before the
+	  write is performed.
+endchoice
+
+config ARCH_CPU_INIT
+	bool "Enable ARCH_CPU_INIT"
+	help
+	  Some architectures require a call to arch_cpu_init().
+	  Say Y here to enable it
+
+config SYS_ARCH_TIMER
+	bool "ARM Generic Timer support"
+	depends on CPU_V7A || ARM64
+	default y if ARM64
+	help
+	  The ARM Generic Timer (aka arch-timer) provides an architected
+	  interface to a timer source on an SoC.
+	  It is mandatory for ARMv8 implementation and widely available
+	  on ARMv7 systems.
+
+config ARM_SMCCC
+	bool "Support for ARM SMC Calling Convention (SMCCC)"
+	depends on CPU_V7A || ARM64
+	select ARM_PSCI_FW
+	help
+	  Say Y here if you want to enable ARM SMC Calling Convention.
+	  This should be enabled if U-Boot needs to communicate with system
+	  firmware (for example, PSCI) according to SMCCC.
+
+config SEMIHOSTING
+	bool "support boot from semihosting"
+	help
+	  In emulated environments, semihosting is a way for
+	  the hosted environment to call out to the emulator to
+	  retrieve files from the host machine.
+
+config SYS_THUMB_BUILD
+	bool "Build U-Boot using the Thumb instruction set"
+	depends on !ARM64
+	help
+	   Use this flag to build U-Boot using the Thumb instruction set for
+	   ARM architectures. Thumb instruction set provides better code
+	   density. For ARM architectures that support Thumb2 this flag will
+	   result in Thumb2 code generated by GCC.
+
+config SPL_SYS_THUMB_BUILD
+	bool "Build SPL using the Thumb instruction set"
+	default y if SYS_THUMB_BUILD
+	depends on !ARM64 && SPL
+	help
+	   Use this flag to build SPL using the Thumb instruction set for
+	   ARM architectures. Thumb instruction set provides better code
+	   density. For ARM architectures that support Thumb2 this flag will
+	   result in Thumb2 code generated by GCC.
+
+config TPL_SYS_THUMB_BUILD
+	bool "Build TPL using the Thumb instruction set"
+	default y if SYS_THUMB_BUILD
+	depends on TPL && !ARM64
+	help
+	   Use this flag to build TPL using the Thumb instruction set for
+	   ARM architectures. Thumb instruction set provides better code
+	   density. For ARM architectures that support Thumb2 this flag will
+	   result in Thumb2 code generated by GCC.
+
+
+config SYS_L2CACHE_OFF
+	bool "L2cache off"
+	help
+	  If SoC does not support L2CACHE or one does not want to enable
+	  L2CACHE, choose this option.
+
+config ENABLE_ARM_SOC_BOOT0_HOOK
+	bool "prepare BOOT0 header"
+	help
+	  If the SoC's BOOT0 requires a header area filled with (magic)
+	  values, then choose this option, and create a file included as
+	  <asm/arch/boot0.h> which contains the required assembler code.
+
+config ARM_CORTEX_CPU_IS_UP
+	bool
+	default n
+
+config USE_ARCH_MEMCPY
+	bool "Use an assembly optimized implementation of memcpy"
+	default y
+	depends on !ARM64
+	help
+	  Enable the generation of an optimized version of memcpy.
+	  Such an implementation may be faster under some conditions
+	  but may increase the binary size.
+
+config SPL_USE_ARCH_MEMCPY
+	bool "Use an assembly optimized implementation of memcpy for SPL"
+	default y if USE_ARCH_MEMCPY
+	depends on !ARM64 && SPL
+	help
+	  Enable the generation of an optimized version of memcpy.
+	  Such an implementation may be faster under some conditions
+	  but may increase the binary size.
+
+config TPL_USE_ARCH_MEMCPY
+	bool "Use an assembly optimized implementation of memcpy for TPL"
+	default y if USE_ARCH_MEMCPY
+	depends on !ARM64 && TPL
+	help
+	  Enable the generation of an optimized version of memcpy.
+	  Such an implementation may be faster under some conditions
+	  but may increase the binary size.
+
+config USE_ARCH_MEMSET
+	bool "Use an assembly optimized implementation of memset"
+	default y
+	depends on !ARM64
+	help
+	  Enable the generation of an optimized version of memset.
+	  Such an implementation may be faster under some conditions
+	  but may increase the binary size.
+
+config SPL_USE_ARCH_MEMSET
+	bool "Use an assembly optimized implementation of memset for SPL"
+	default y if USE_ARCH_MEMSET
+	depends on !ARM64 && SPL
+	help
+	  Enable the generation of an optimized version of memset.
+	  Such an implementation may be faster under some conditions
+	  but may increase the binary size.
+
+config TPL_USE_ARCH_MEMSET
+	bool "Use an assembly optimized implementation of memset for TPL"
+	default y if USE_ARCH_MEMSET
+	depends on !ARM64 && TPL
+	help
+	  Enable the generation of an optimized version of memset.
+	  Such an implementation may be faster under some conditions
+	  but may increase the binary size.
+
+config SET_STACK_SIZE
+	bool "Enable an option to set max stack size that can be used"
+	default y if ARCH_VERSAL || ARCH_ZYNQMP || ARCH_ZYNQ
+	help
+	  This will enable an option to set max stack size that can be
+	  used by U-Boot.
+
+config STACK_SIZE
+	hex "Define max stack size that can be used by U-Boot"
+	depends on SET_STACK_SIZE
+	default 0x4000000 if ARCH_VERSAL || ARCH_ZYNQMP
+	default 0x1000000 if ARCH_ZYNQ
+	help
+	  Define Max stack size that can be used by U-Boot so that the
+	  initrd_high will be calculated as base stack pointer minus this
+	  stack size.
+
+config ARM64_SUPPORT_AARCH32
+	bool "ARM64 system support AArch32 execution state"
+	depends on ARM64
+	default y if !TARGET_THUNDERX_88XX
+	help
+	  This ARM64 system supports AArch32 execution state.
+
+choice
+	prompt "Target select"
+	default TARGET_RTL8730E
+
+config TARGET_RTL8730E
+	bool "Realtek RTL8730E Platform"
+	select CPU_V8
+	select SYS_ARCH_TIMER
+	select OF_LIBFDT
+
+endchoice
+
+config ARCH_SUPPORT_TFABOOT
+	bool
+
+config TFABOOT
+	bool "Support for booting from TF-A"
+	depends on ARCH_SUPPORT_TFABOOT
+	default n
+	help
+	  Enabling this will make a U-Boot binary that is capable of being
+	  booted via TF-A (Trusted Firmware for Cortex-A).
+
+config TI_SECURE_DEVICE
+	bool "HS Device Type Support"
+	depends on ARCH_KEYSTONE || ARCH_OMAP2PLUS || ARCH_K3
+	help
+	  If a high secure (HS) device type is being used, this config
+	  must be set. This option impacts various aspects of the
+	  build system (to create signed boot images that can be
+	  authenticated) and the code. See the doc/README.ti-secure
+	  file for further details.
+
+if AM43XX || AM33XX || OMAP54XX || ARCH_KEYSTONE
+config ISW_ENTRY_ADDR
+	hex "Address in memory or XIP address of bootloader entry point"
+	default 0x402F4000 if AM43XX
+	default 0x402F0400 if AM33XX
+	default 0x40301350 if OMAP54XX
+	help
+	  After any reset, the boot ROM searches the boot media for a valid
+	  boot image. For non-XIP devices, the ROM then copies the image into
+	  internal memory. For all boot modes, after the ROM processes the
+	  boot image it eventually computes the entry point address depending
+	  on the device type (secure/non-secure), boot media (xip/non-xip) and
+	  image headers.
+endif
+
+source "board/realtek/amebasmart/Kconfig"
+
+source "arch/arm/Kconfig.debug"
+
+endmenu
+
+config SPL_LDSCRIPT
+	default "arch/arm/cpu/arm926ejs/mxs/u-boot-spl.lds" if (ARCH_MX23 || ARCH_MX28) && !SPL_FRAMEWORK
+	default "arch/arm/cpu/arm1136/u-boot-spl.lds" if CPU_ARM1136
+	default "arch/arm/cpu/armv8/u-boot-spl.lds" if ARM64
+
+
